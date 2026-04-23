@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>育休給付金シミュレーター v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1117;--sf:#161b22;--sf2:#1c2128;--bd:#30363d;--ac:#58a6ff;--ac2:#3fb950;--ac3:#f78166;--ac4:#d2a8ff;--tx:#e6edf3;--tx2:#8b949e;--tx3:#6e7681;--mama:#ff7eb3;--papa:#58a6ff;--gold:#e3b341}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans JP",sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;line-height:1.6}
+header{background:linear-gradient(135deg,#0d1117,#1a1f2e,#0d1117);border-bottom:1px solid var(--bd);padding:28px 20px 22px;text-align:center;position:relative;overflow:hidden}
+header::before{content:"";position:absolute;top:-60px;left:-60px;right:-60px;height:200px;background:radial-gradient(ellipse at 30% 50%,rgba(88,166,255,.12),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(63,185,80,.08),transparent 60%);pointer-events:none}
+.badge{display:inline-block;font-family:"DM Mono",monospace;font-size:11px;color:var(--ac2);border:1px solid rgba(63,185,80,.4);padding:3px 10px;border-radius:20px;margin-bottom:10px}
+h1{font-size:clamp(20px,5vw,30px);font-weight:900;letter-spacing:-.02em;line-height:1.2;margin-bottom:6px}
+h1 span{color:var(--ac)}
+header p{font-size:13px;color:var(--tx2);max-width:520px;margin:0 auto}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+.tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:5px}
+.tb{flex:1;padding:9px 6px;border:none;background:transparent;color:var(--tx2);font-family:"Noto Sans JP",sans-serif;font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:5px}
+.tb.on{background:var(--sf2);color:var(--tx);border:1px solid var(--bd)}
+.tb .dot{width:7px;height:7px;border-radius:50%;background:var(--mama);flex-shrink:0}
+.tb:nth-child(2) .dot{background:var(--papa)}
+.tb:nth-child(3) .dot{background:var(--gold)}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:18px;margin-bottom:14px}
+.card.purple{border-color:rgba(210,168,255,.3);background:rgba(210,168,255,.04)}
+.ct{font-size:11px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.ct::after{content:"";flex:1;height:1px;background:var(--bd)}
+.ct.purple{color:var(--ac4)}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:12px}
+.g{display:flex;flex-direction:column;gap:5px}
+.g label{font-size:12px;color:var(--tx2);font-weight:500}
+.hint{font-size:11px;color:var(--tx3);line-height:1.4}
+.iw{position:relative;display:flex;align-items:center}
+.iw input,.iw select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:"Noto Sans JP",sans-serif;font-size:14px;padding:9px 12px;outline:none;transition:border-color .2s;-webkit-appearance:none;cursor:pointer}
+.iw input[type="number"]{font-family:"DM Mono",monospace;padding-right:38px}
+.iw input:focus,.iw select:focus{border-color:var(--ac)}
+.iu{position:absolute;right:10px;font-size:12px;color:var(--tx3);pointer-events:none}
+.dsr{display:flex;gap:5px;align-items:center}
+.dsr select{flex:1;background:var(--bg);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-family:"Noto Sans JP",sans-serif;font-size:13px;padding:9px 4px;outline:none;cursor:pointer;-webkit-appearance:none;text-align:center}
+.dsr select:focus{border-color:var(--ac)}
+.sl{font-size:11px;color:var(--tx3);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+.sl::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--ac)}
+.sl.gold::before{background:var(--gold)}
+.leave-block{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.leave-block-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.leave-block-hdr .lbl{font-size:13px;color:var(--tx2);font-weight:600}
+.leave-type-tag{font-size:10px;padding:2px 8px;border-radius:4px;font-family:"DM Mono",monospace}
+.tag-normal{background:rgba(88,166,255,.15);color:var(--ac)}
+.tag-sanpapaiku{background:rgba(210,168,255,.15);color:var(--ac4)}
+.be{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:8px}
+.beh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.beh span{font-size:13px;color:var(--tx2);font-weight:600}
+.rmb{background:none;border:none;color:var(--tx3);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+.rmb:hover{color:var(--ac3)}
+.bfr{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ab{background:none;border:1px dashed var(--bd);border-radius:8px;color:var(--tx3);font-size:13px;padding:8px 14px;cursor:pointer;transition:all .2s;font-family:"Noto Sans JP",sans-serif;width:100%;margin-top:2px}
+.ab:hover{border-color:var(--gold);color:var(--gold)}
+.ab.gr:hover{border-color:var(--ac2);color:var(--ac2)}
+.cl{display:flex;flex-direction:column;gap:8px}
+.cr{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;flex-wrap:wrap}
+.cn{font-size:11px;color:var(--tx3);font-weight:700;min-width:28px}
+.rmc{background:none;border:none;color:var(--tx3);font-size:16px;cursor:pointer;padding:2px 6px}
+.rmc:hover{color:var(--ac3)}
+.cbtn{width:100%;padding:15px;background:linear-gradient(135deg,var(--ac),#1f6feb);border:none;border-radius:10px;color:#fff;font-family:"Noto Sans JP",sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .2s;margin-top:6px}
+.cbtn:hover{opacity:.9;transform:translateY(-1px)}
+#res{display:none}
+#res.on{display:block}
+.rh{text-align:center;padding:22px 20px;background:linear-gradient(135deg,var(--sf),var(--sf2));border:1px solid var(--bd);border-radius:12px;margin-bottom:14px;position:relative;overflow:hidden}
+.rh::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(88,166,255,.08),transparent 70%)}
+.rh h2{font-size:13px;color:var(--tx2);margin-bottom:4px;font-weight:400}
+.ta{font-family:"DM Mono",monospace;font-size:clamp(30px,7vw,46px);font-weight:500;color:var(--ac);letter-spacing:-.02em}
+.ta span{font-size:.5em;color:var(--tx2)}
+.rs{font-size:12px;color:var(--tx3);margin-top:5px}
+.kr{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px}
+.kp{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px}
+.kl{font-size:11px;color:var(--tx3);margin-bottom:5px;font-weight:500}
+.kv{font-family:"DM Mono",monospace;font-size:18px;font-weight:500;color:var(--tx)}
+.kv.bl{color:var(--ac)}.kv.gn{color:var(--ac2)}.kv.gd{color:var(--gold)}.kv.pr{color:var(--ac4)}
+.kv small{font-size:11px}
+.tc{background:var(--sf);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.th2{padding:12px 18px;border-bottom:1px solid var(--bd);font-size:13px;font-weight:700;color:var(--tx2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pt{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:20px}
+.pt.mama{background:rgba(255,126,179,.15);color:var(--mama)}
+.pt.papa{background:rgba(88,166,255,.15);color:var(--papa)}
+.pt .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.tt{width:100%;border-collapse:collapse;font-size:12px}
+.tt th{background:var(--sf2);color:var(--tx3);font-size:10px;font-weight:700;text-align:right;padding:7px 10px;letter-spacing:.04em;text-transform:uppercase}
+.tt th:first-child{text-align:left}
+.tt td{padding:9px 10px;text-align:right;border-top:1px solid rgba(48,54,61,.5);font-family:"DM Mono",monospace;font-size:12px;color:var(--tx2);white-space:nowrap}
+.tt td:first-child{text-align:left;font-family:"Noto Sans JP",sans-serif;color:var(--tx);font-size:12px}
+.tt tr.brow td{color:var(--gold)}
+.tt tr.brow td:first-child{color:var(--gold)}
+.tt tr:hover td{background:rgba(255,255,255,.02)}
+.rc{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:3px;font-family:"DM Mono",monospace;vertical-align:middle}
+.r67{background:rgba(63,185,80,.15);color:var(--ac2)}
+.r50{background:rgba(248,130,102,.15);color:#f88166}
+.r80{background:rgba(210,168,255,.15);color:var(--ac4)}
+.btag{font-size:10px;background:rgba(227,179,65,.15);color:var(--gold);padding:1px 5px;border-radius:4px;margin-left:3px;font-family:"DM Mono",monospace}
+.tr2 td{font-weight:700;color:var(--tx)!important;border-top:1px solid var(--bd)!important;background:var(--sf2)}
+.ag{display:grid;gap:8px}
+.ar{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--bd)}
+.ar .ci{font-size:13px;color:var(--tx2)}
+.ar .ca{font-family:"DM Mono",monospace;font-size:14px;color:var(--gold);font-weight:500}
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:7px;margin-top:4px}
+.cal-m{border:1px solid var(--bd);border-radius:8px;padding:9px 11px;background:var(--bg)}
+.cal-m.has-pay{border-color:var(--ac);background:rgba(88,166,255,.06)}
+.cal-m.has-bonus{border-color:var(--gold);background:rgba(227,179,65,.06)}
+.cal-m.has-child{border-color:var(--ac2);background:rgba(63,185,80,.06)}
+.cal-m.has-multi{border-color:var(--ac4);background:rgba(210,168,255,.06)}
+.cm-lbl{font-size:12px;color:var(--tx2);margin-bottom:5px}
+.cm-tags{display:flex;flex-direction:column;gap:3px}
+.ctag{font-size:10px;padding:2px 6px;border-radius:4px;display:inline-block;font-family:"DM Mono",monospace}
+.ctag-pay{background:rgba(88,166,255,.2);color:var(--ac)}
+.ctag-bonus{background:rgba(227,179,65,.2);color:var(--gold)}
+.ctag-child{background:rgba(63,185,80,.2);color:var(--ac2)}
+.nt{background:rgba(88,166,255,.06);border:1px solid rgba(88,166,255,.2);border-radius:10px;padding:14px;font-size:12px;color:var(--tx2);line-height:1.8}
+.nt strong{color:var(--ac)}.nt ul{padding-left:14px}.nt li{margin-bottom:3px}
+.ss{text-align:center;padding:22px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-top:14px}
+.ss p{font-size:13px;color:var(--tx2);margin-bottom:10px}
+.sbtn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:#1d9bf0;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:"Noto Sans JP",sans-serif;text-decoration:none}
+.mn{margin-top:8px;font-size:11px;color:var(--tx3)}
+.mn a{color:var(--ac);text-decoration:none}
+.mode-btn{padding:8px 20px;border:1px solid var(--bd);border-radius:8px;background:transparent;color:var(--tx2);font-family:"Noto Sans JP",sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s}
+.mode-btn.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.mode-btn:not(.on):hover{border-color:var(--ac);color:var(--ac)}
+.ai{animation:fu .4s ease both}
+.ai:nth-child(2){animation-delay:.04s}.ai:nth-child(3){animation-delay:.08s}.ai:nth-child(4){animation-delay:.12s}.ai:nth-child(5){animation-delay:.16s}
+@media(max-width:580px){.fg{grid-template-columns:1fr}.bfr{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="badge">2025年最新制度対応 v5</div>
+  <h1>育休中、<span>いくらもらえる？</span><br>給付金シミュレーター</h1>
+  <p>育休給付金（分割・産後パパ育休対応）・ボーナス手取り・社会保険料免除・児童手当を月別で可視化</p>
+</header>
+<div class="wrap">
+  <div id="inp">
+    <div class="tabs">
+      <button class="tb on" id="tbn-mama" onclick="switchTab('mama')"><span class="dot"></span>ママの育休</button>
+      <button class="tb" id="tbn-papa" onclick="switchTab('papa')"><span class="dot"></span>パパの育休</button>
+      <button class="tb" id="tbn-children" onclick="switchTab('children')"><span class="dot"></span>児童手当</button>
+    </div>
+
+    <!-- ===== MAMA ===== -->
+    <div id="t-mama">
+      <div class="card">
+        <div class="ct">ママの基本情報</div>
+        <div class="fg">
+          <div class="g">
+            <label>月額給与（額面）</label>
+            <div class="iw"><input type="number" id="mama-sal" placeholder="300000" min="0"><span class="iu">円</span></div>
+            <span class="hint">給与明細「総支給額」（交通費含む・賞与除く）</span>
+          </div>
+          <div class="g">
+            <label>勤務先の都道府県</label>
+            <div class="iw"><select id="mama-pref"></select></div>
+            <span class="hint">協会けんぽ2025年度料率で社会保険料を計算</span>
+          </div>
+          <div class="g">
+            <label>年齢区分</label>
+            <div class="iw"><select id="mama-age">
+              <option value="young">40歳未満（介護保険なし）</option>
+              <option value="old">40〜64歳（介護保険あり）</option>
+            </select></div>
+            <span class="hint">社会保険料＝健保＋厚年＋（介護）＋雇用保険</span>
+          </div>
+          <div class="g">
+            <label>扶養親族の数（16歳以上）</label>
+            <div class="iw"><select id="mama-dep">
+              <option value="0">0人</option>
+              <option value="1">1人</option>
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+              <option value="4">4人以上</option>
+            </select></div>
+            <span class="hint">ボーナス所得税の計算に使用</span>
+          </div>
+        </div>
+
+        <div class="sl">育休期間（最大2回まで入力可）</div>
+        <div id="mama-leaves"></div>
+        <button class="ab" id="mama-add-leave" onclick="addLeave('mama', 'normal')">＋ 2回目の育休を追加</button>
+      </div>
+
+      <div class="card">
+        <div class="ct">ボーナス（賞与）</div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.7">
+          育休中のボーナスは<strong style="color:var(--gold)">社会保険料が免除</strong>（条件：支給月末を含む連続1ヶ月超の育休）。ただし<strong>所得税・雇用保険は引かれます</strong>。手取り額を計算します。
+        </p>
+        <div id="mama-bonus-list"></div>
+        <button class="ab" onclick="addBonus('mama')">＋ ボーナスを追加</button>
+      </div>
+
+      <div class="card purple">
+        <div class="ct purple">NEW 出生後休業支援給付金（2025年4月〜）</div>
+        <div class="fg">
+          <div class="g">
+            <label>パパも育休を14日以上取得しましたか？</label>
+            <div class="iw"><select id="papa-also">
+              <option value="yes">はい</option>
+              <option value="no">いいえ</option>
+            </select></div>
+            <span class="hint">両親ともに14日以上取得で産後最初の28日間は給付率が実質80%に（社保免除と合わせ実質10割）。なお本ツールでは出生日を入力しないため、正確な要件である「出生日翌日から8週間（56日）以内」の判定は行っていません。分割育休で産後8週を超えてから育休を取得する場合、実際には80%が適用されないことがあります。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">復職期間の給与手取り計算方法</div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.7">
+          分割育休の間など、育休期間外の月は通常給与として表示します。計算方法を選んでください。
+        </p>
+        <div style="display:flex;gap:8px;margin-bottom:14px">
+          <button id="mode-btn-simple" class="mode-btn on" onclick="setSalMode('simple')">簡易計算</button>
+          <button id="mode-btn-fixed" class="mode-btn" onclick="setSalMode('fixed')">固定割合</button>
+        </div>
+        <div id="mode-simple-desc" style="font-size:12px;color:var(--tx2);line-height:1.7">
+          社会保険料（都道府県・年齢別）＋所得税（源泉徴収税額表）＋住民税概算（月給×10%÷12）で計算。<br>
+          <span style="color:var(--tx3)">※住民税は前年所得ベースのため概算です。</span>
+        </div>
+        <div id="mode-fixed-desc" style="display:none;font-size:12px;color:var(--tx2);line-height:1.7">
+          月給に対して固定割合で手取りを概算します。
+          <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+            <span style="font-size:13px;color:var(--tx2)">手取り割合：</span>
+            <input type="range" id="fixed-rate-slider" min="70" max="90" value="80" step="1" style="flex:1;cursor:pointer" oninput="document.getElementById('fixed-rate-val').textContent=this.value">
+            <span id="fixed-rate-val" style="font-family:'DM Mono',monospace;font-size:15px;color:var(--ac);min-width:36px">80</span>
+            <span style="font-size:13px;color:var(--tx2)">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAPA ===== -->
+    <div id="t-papa" style="display:none">
+      <div class="card">
+        <div class="ct">パパの基本情報</div>
+        <div class="fg">
+          <div class="g">
+            <label>月額給与（額面）</label>
+            <div class="iw"><input type="number" id="papa-sal" placeholder="400000" min="0"><span class="iu">円</span></div>
+            <span class="hint">給与明細「総支給額」（交通費含む・賞与除く）</span>
+          </div>
+          <div class="g">
+            <label>勤務先の都道府県</label>
+            <div class="iw"><select id="papa-pref"></select></div>
+          </div>
+          <div class="g">
+            <label>年齢区分</label>
+            <div class="iw"><select id="papa-age">
+              <option value="young">40歳未満（介護保険なし）</option>
+              <option value="old">40〜64歳（介護保険あり）</option>
+            </select></div>
+          </div>
+          <div class="g">
+            <label>扶養親族の数（16歳以上）</label>
+            <div class="iw"><select id="papa-dep">
+              <option value="0">0人</option>
+              <option value="1">1人</option>
+              <option value="2">2人</option>
+              <option value="3">3人</option>
+              <option value="4">4人以上</option>
+            </select></div>
+          </div>
+        </div>
+
+        <div class="sl">育休期間</div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.7">
+          パパは<strong style="color:var(--ac4)">産後パパ育休（出生後8週以内、最大4週・2回分割可）</strong>と<strong style="color:var(--ac)">通常育休（最大2回）</strong>を組み合わせて最大4回取得できます。
+        </p>
+        <div id="papa-leaves"></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          <button class="ab" style="flex:1" onclick="addLeave('papa', 'sanpapaiku')">＋ 産後パパ育休を追加</button>
+          <button class="ab" style="flex:1" onclick="addLeave('papa', 'normal')">＋ 通常育休を追加</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="ct">ボーナス（賞与）</div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.7">育休中のボーナス手取りをシミュレーションします（社保免除・所得税・雇用保険を考慮）。</p>
+        <div id="papa-bonus-list"></div>
+        <button class="ab" onclick="addBonus('papa')">＋ ボーナスを追加</button>
+      </div>
+    </div>
+
+    <!-- ===== CHILDREN ===== -->
+    <div id="t-children" style="display:none">
+      <div class="card">
+        <div class="ct">お子さまの情報（2024年10月〜新制度）</div>
+        <p style="font-size:12px;color:var(--tx2);margin-bottom:14px;line-height:1.7">
+          第3子以降は月3万円（所得制限なし）。<strong>支給は申請月の翌月分から</strong>が原則です（出生翌日から15日以内に申請した場合は出生月の翌月から）。<br>
+          <span style="color:var(--gold)">⚠ 第3子以降の判定は「22歳到達後の3月31日まで」の子をすべてカウントします。18〜22歳のお子さまがいる場合も入力してください（給付金は計算されませんが、下のお子さまへの第3子判定に影響します）。</span>
+        </p>
+        <div class="cl" id="children-list">
+          <div class="cr">
+            <span class="cn">第1子</span>
+            <span style="font-size:13px;color:var(--tx2)">生年月日：</span>
+            <div class="dsr child-pk" style="flex:1;min-width:200px"></div>
+            <button class="rmc" style="display:none" onclick="removeChild(this)">×</button>
+          </div>
+        </div>
+        <div style="margin-top:10px"><button class="ab gr" onclick="addChild()">＋ 子どもを追加</button></div>
+
+        <div class="sl" style="margin-top:18px">計算期間</div>
+        <div class="fg">
+          <div class="g"><label>計算開始月</label><div class="dsr" id="calc-start"></div></div>
+          <div class="g"><label>計算終了月</label><div class="dsr" id="calc-end"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="cbtn" onclick="calculate()">シミュレーション実行 →</button>
+  </div><!-- /inp -->
+
+  <div id="res">
+    <div id="res-inner"></div>
+    <div class="nt">
+      <strong>注意事項・免責事項</strong>
+      <ul style="margin-top:6px">
+        <li>本ツールは概算です。実際の給付額はハローワーク・勤務先の審査により異なります。</li>
+        <li>健康保険料率は協会けんぽ2025年度の料率を使用。組合健保加入の場合は料率が異なります。</li>
+        <li>社会保険料＝健康保険料＋介護保険料（40〜64歳のみ）＋厚生年金保険料（本人負担9.15%）＋雇用保険料（0.55%・令和7年度）。</li>
+        <li>ボーナスの社保免除条件は「支給月末日を含む連続1ヶ月超の育休取得」。詳細は勤務先へご確認ください。</li>
+        <li>児童手当は申請月の翌月分から支給（原則）。遡及支給はできません。早めの申請を。</li>
+        <li>住民税は育休中も前年所得をもとに課税が続きます（社保免除とは別）。</li>
+        <li>出生後休業支援給付金（80%給付）は本ツールでは「育休開始から28日以内」で判定しており、正確な要件「出生日翌日から8週間（56日）以内に取得した育休のうち最大28日」とは異なります。分割育休で産後8週を超えて取得する場合は実際の支給要件をハローワークにてご確認ください。</li>
+        <li>育休給付金の賃金日額の上限・下限は令和6年8月〜令和7年7月の値（上限15,690円・下限2,869円）を使用しています。令和7年8月以降の改定値は未反映のため、該当期間に育休を取得される方は最新の上限額をハローワークにてご確認ください。</li>
+        <li>制度は改正される場合があります。最新情報は厚生労働省・こども家庭庁のサイトをご確認ください。</li>
+      </ul>
+    </div>
+    <div class="ss">
+      <p>このツールが役に立ったらXでシェアしてください</p>
+      <a class="sbtn" id="share-link" href="#" target="_blank">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        Xでシェア
+      </a>
+      <div class="mn">ツール制作：<a href="https://x.com/miruken_papa" target="_blank">@miruken_papa</a>｜育休3回×資産5500万円のパパが作りました</div>
+    </div>
+    <div style="margin-top:20px;text-align:center">
+      <button onclick="resetForm()" style="background:none;border:1px solid var(--bd);color:var(--tx2);padding:9px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-family:'Noto Sans JP',sans-serif">← 入力に戻る</button>
+    </div>
+  </div>
+</div><!-- /wrap -->
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+var PREF_RATES = {
+  "北海道":10.31,"青森":9.85,"岩手":9.62,"宮城":10.11,"秋田":10.01,
+  "山形":9.75,"福島":9.62,"茨城":9.67,"栃木":9.82,"群馬":9.77,
+  "埼玉":9.76,"千葉":9.79,"東京":9.91,"神奈川":9.92,"新潟":9.55,
+  "富山":9.65,"石川":9.88,"福井":9.94,"山梨":9.89,"長野":9.69,
+  "岐阜":9.93,"静岡":9.80,"愛知":10.03,"三重":9.99,"滋賀":9.97,
+  "京都":10.03,"大阪":10.24,"兵庫":10.16,"奈良":10.02,"和歌山":10.19,
+  "鳥取":9.93,"島根":9.94,"岡山":10.17,"広島":9.97,"山口":10.36,
+  "徳島":10.47,"香川":10.21,"愛媛":10.18,"高知":10.13,"福岡":10.31,
+  "佐賀":10.78,"長崎":10.41,"熊本":10.12,"大分":10.25,"宮崎":10.09,
+  "鹿児島":10.31,"沖縄":9.44
+};
+var PREFS = Object.keys(PREF_RATES);
+
+// 賞与源泉徴収税額算出率の表（甲欄、令和7年分）
+// [上限未満, dep0, dep1, dep2, dep3, dep4+]
+var BONUS_TAX = [
+  [68000,0,0,0,0,0],
+  [79000,2.042,0,0,0,0],
+  [252000,4.084,2.042,0,0,0],
+  [300000,6.126,4.084,2.042,0,0],
+  [334000,8.168,6.126,4.084,2.042,0],
+  [363000,10.210,8.168,6.126,4.084,2.042],
+  [395000,12.252,10.210,8.168,6.126,4.084],
+  [426000,14.294,12.252,10.210,8.168,6.126],
+  [550000,16.336,14.294,12.252,10.210,8.168],
+  [695000,18.378,16.336,14.294,12.252,10.210],
+  [906000,20.420,18.378,16.336,14.294,12.252],
+  [1160000,22.462,20.420,18.378,16.336,14.294],
+  [1300000,24.504,22.462,20.420,18.378,16.336],
+  [1500000,26.546,24.504,22.462,20.420,18.378],
+  [Infinity,28.588,26.546,24.504,22.462,20.420]
+];
+
+function getBonusTaxRate(prevNet, dep) {
+  var d = Math.min(parseInt(dep)||0, 4);
+  for (var i=0; i<BONUS_TAX.length; i++) {
+    if (prevNet < BONUS_TAX[i][0]) return BONUS_TAX[i][d+1] / 100;
+  }
+  return 0.28588;
+}
+
+// ============================================================
+// DATE SELECT
+// ============================================================
+function buildDateSel(el, defY, defM, defD, hasDay) {
+  if (typeof el === 'string') el = document.getElementById(el);
+  if (!el) return;
+  el.innerHTML = '';
+  var cy = new Date().getFullYear();
+  var ys = document.createElement('select'); ys.className = 'date-y';
+  for (var y=cy-10; y<=cy+5; y++) {
+    var o = document.createElement('option'); o.value=y; o.textContent=y+'年';
+    if (y===defY) o.selected=true; ys.appendChild(o);
+  }
+  el.appendChild(ys);
+  var ms = document.createElement('select'); ms.className = 'date-m';
+  for (var m=1; m<=12; m++) {
+    var o2 = document.createElement('option'); o2.value=m; o2.textContent=m+'月';
+    if (m===defM) o2.selected=true; ms.appendChild(o2);
+  }
+  el.appendChild(ms);
+  if (hasDay) {
+    var ds = document.createElement('select'); ds.className = 'date-d';
+    for (var d=1; d<=31; d++) {
+      var o3 = document.createElement('option'); o3.value=d; o3.textContent=d+'日';
+      if (d===(defD||1)) o3.selected=true; ds.appendChild(o3);
+    }
+    el.appendChild(ds);
+  }
+}
+
+function getDateVal(el, hasDay) {
+  if (typeof el === 'string') el = document.getElementById(el);
+  if (!el) return null;
+  var y = el.querySelector('.date-y'), m = el.querySelector('.date-m'), d = el.querySelector('.date-d');
+  if (!y||!m) return null;
+  var mv = String(m.value).padStart(2,'0');
+  if (hasDay && d) return y.value+'-'+mv+'-'+String(d.value).padStart(2,'0');
+  return y.value+'-'+mv+'-01';
+}
+
+// ============================================================
+// TAB
+// ============================================================
+function switchTab(name) {
+  ['mama','papa','children'].forEach(function(t) {
+    document.getElementById('t-'+t).style.display = 'none';
+    document.getElementById('tbn-'+t).classList.remove('on');
+  });
+  document.getElementById('t-'+name).style.display = 'block';
+  document.getElementById('tbn-'+name).classList.add('on');
+}
+
+// ============================================================
+// PREF SELECT
+// ============================================================
+function buildPrefSel(id, def) {
+  var sel = document.getElementById(id);
+  PREFS.forEach(function(p) {
+    var o = document.createElement('option'); o.value=p; o.textContent=p;
+    if (p===def) o.selected=true; sel.appendChild(o);
+  });
+}
+
+// ============================================================
+// LEAVE BLOCKS
+// ============================================================
+var leaveCounts = {mama:0, papa:0};
+
+function addLeave(who, type) {
+  var list = document.getElementById(who+'-leaves');
+  var existing = list.querySelectorAll('.leave-block').length;
+  var maxLeaves = (who==='mama') ? 2 : 4;
+  if (existing >= maxLeaves) {
+    alert('最大'+maxLeaves+'回まで入力できます'); return;
+  }
+  leaveCounts[who]++;
+  var n = leaveCounts[who];
+  var now = new Date();
+
+  var block = document.createElement('div');
+  block.className = 'leave-block';
+
+  var hdr = document.createElement('div');
+  hdr.className = 'leave-block-hdr';
+
+  var lblEl = document.createElement('span');
+  lblEl.className = 'lbl';
+  var typeLabel = (type==='sanpapaiku') ? '産後パパ育休' : '通常育休';
+  var nthLabel = existing+1;
+  lblEl.textContent = nthLabel + '回目';
+
+  var tagEl = document.createElement('span');
+  tagEl.className = 'leave-type-tag ' + (type==='sanpapaiku' ? 'tag-sanpapaiku' : 'tag-normal');
+  tagEl.textContent = typeLabel;
+  tagEl.dataset.type = type;
+
+  var rmBtn = document.createElement('button');
+  rmBtn.className = 'rmb'; rmBtn.textContent = '×';
+  rmBtn.onclick = (function(b){ return function(){ b.remove(); updateLeaveLabels(who); }; })(block);
+
+  hdr.appendChild(lblEl); hdr.appendChild(tagEl); hdr.appendChild(rmBtn);
+  block.appendChild(hdr);
+
+  var grid = document.createElement('div');
+  grid.className = 'fg';
+
+  var g1 = document.createElement('div'); g1.className = 'g';
+  var l1 = document.createElement('label'); l1.textContent = '開始日';
+  var dsr1 = document.createElement('div'); dsr1.className = 'dsr leave-start';
+  g1.appendChild(l1); g1.appendChild(dsr1);
+
+  var g2 = document.createElement('div'); g2.className = 'g';
+  var l2 = document.createElement('label'); l2.textContent = '終了予定日';
+  var dsr2 = document.createElement('div'); dsr2.className = 'dsr leave-end';
+  g2.appendChild(l2); g2.appendChild(dsr2);
+
+  grid.appendChild(g1); grid.appendChild(g2);
+  block.appendChild(grid);
+  list.appendChild(block);
+
+  var endD = new Date(now); endD.setMonth(endD.getMonth()+12);
+  buildDateSel(dsr1, now.getFullYear(), now.getMonth()+1, now.getDate(), true);
+  buildDateSel(dsr2, endD.getFullYear(), endD.getMonth()+1, endD.getDate(), true);
+
+  // Hide add button if max reached
+  updateLeaveLabels(who);
+}
+
+function updateLeaveLabels(who) {
+  var list = document.getElementById(who+'-leaves');
+  var blocks = list.querySelectorAll('.leave-block');
+  blocks.forEach(function(b, i) {
+    b.querySelector('.lbl').textContent = (i+1)+'回目';
+  });
+  var addBtn = document.getElementById(who+'-add-leave');
+  if (addBtn) {
+    var maxLeaves = (who==='mama') ? 2 : 4;
+    addBtn.style.display = blocks.length >= maxLeaves ? 'none' : 'block';
+  }
+}
+
+// ============================================================
+// BONUS
+// ============================================================
+var bonusCounts = {mama:0, papa:0};
+
+function addBonus(who) {
+  bonusCounts[who]++;
+  var list = document.getElementById(who+'-bonus-list');
+  var now = new Date();
+  var n = bonusCounts[who];
+
+  var div = document.createElement('div'); div.className = 'be';
+
+  var hdr = document.createElement('div'); hdr.className = 'beh';
+  var sp = document.createElement('span'); sp.textContent = 'ボーナス '+n+'回目';
+  var rm = document.createElement('button'); rm.className = 'rmb'; rm.textContent = '×';
+  rm.onclick = (function(d){ return function(){ d.remove(); }; })(div);
+  hdr.appendChild(sp); hdr.appendChild(rm); div.appendChild(hdr);
+
+  var body = document.createElement('div'); body.className = 'bfr';
+
+  // 支給月
+  var g1 = document.createElement('div'); g1.className = 'g';
+  var l1 = document.createElement('label'); l1.textContent = '支給月';
+  var dsr = document.createElement('div'); dsr.className = 'dsr bonus-month-picker';
+  g1.appendChild(l1); g1.appendChild(dsr);
+
+  // 支給額
+  var g2 = document.createElement('div'); g2.className = 'g';
+  var l2 = document.createElement('label'); l2.textContent = '支給額（額面）';
+  var iw2 = document.createElement('div'); iw2.className = 'iw';
+  var inp2 = document.createElement('input'); inp2.type='number'; inp2.className='bonus-amount'; inp2.placeholder='500000'; inp2.min='0';
+  var iu2 = document.createElement('span'); iu2.className='iu'; iu2.textContent='円';
+  iw2.appendChild(inp2); iw2.appendChild(iu2);
+  g2.appendChild(l2); g2.appendChild(iw2);
+
+  // 前月給与
+  var g3 = document.createElement('div'); g3.className = 'g';
+  var l3 = document.createElement('label'); l3.textContent = '前月給与（社保控除後）';
+  var iw3 = document.createElement('div'); iw3.className = 'iw';
+  var inp3 = document.createElement('input'); inp3.type='number'; inp3.className='prev-salary'; inp3.placeholder='250000'; inp3.min='0';
+  var iu3 = document.createElement('span'); iu3.className='iu'; iu3.textContent='円';
+  var hint3 = document.createElement('span'); hint3.className='hint'; hint3.textContent='所得税率の算出に使用（月給×0.85が目安）';
+  iw3.appendChild(inp3); iw3.appendChild(iu3);
+  g3.appendChild(l3); g3.appendChild(iw3); g3.appendChild(hint3);
+
+  body.appendChild(g1); body.appendChild(g2); body.appendChild(g3);
+  div.appendChild(body); list.appendChild(div);
+
+  buildDateSel(dsr, now.getFullYear(), 6, null, false);
+}
+
+// ============================================================
+// CHILDREN
+// ============================================================
+var childCount = 1;
+function addChild() {
+  if (childCount>=6) return; childCount++;
+  var list = document.getElementById('children-list');
+  var now = new Date();
+  var div = document.createElement('div'); div.className = 'cr';
+  var cn = document.createElement('span'); cn.className = 'cn'; cn.textContent = '第'+childCount+'子';
+  var lbl = document.createElement('span'); lbl.style.cssText='font-size:13px;color:var(--tx2)'; lbl.textContent='生年月日：';
+  var pk = document.createElement('div'); pk.className='dsr child-pk'; pk.style.cssText='flex:1;min-width:200px';
+  var rm = document.createElement('button'); rm.className='rmc'; rm.textContent='×';
+  rm.onclick = function(){ removeChild(rm); };
+  div.appendChild(cn); div.appendChild(lbl); div.appendChild(pk); div.appendChild(rm);
+  list.appendChild(div);
+  buildDateSel(pk, now.getFullYear()-1, now.getMonth()+1, 1, true);
+  updateChildLabels();
+}
+function removeChild(btn){ btn.closest('.cr').remove(); childCount--; updateChildLabels(); }
+function updateChildLabels(){
+  var rows = document.querySelectorAll('#children-list .cr');
+  rows.forEach(function(r,i){
+    r.querySelector('.cn').textContent = '第'+(i+1)+'子';
+    var b = r.querySelector('.rmc'); if(b) b.style.display = i===0?'none':'block';
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', function(){
+  buildPrefSel('mama-pref','東京'); buildPrefSel('papa-pref','東京');
+  var now = new Date(); var y=now.getFullYear(), m=now.getMonth()+1, d=now.getDate();
+
+  // mama: 1st leave by default
+  addLeave('mama','normal');
+  // Override dates after creation
+  var mamaBlocks = document.querySelectorAll('#mama-leaves .leave-block');
+  if (mamaBlocks.length>0) {
+    var endDate = new Date(now); endDate.setMonth(endDate.getMonth()+12);
+    buildDateSel(mamaBlocks[0].querySelector('.leave-start'), y, m, d, true);
+    buildDateSel(mamaBlocks[0].querySelector('.leave-end'), endDate.getFullYear(), endDate.getMonth()+1, endDate.getDate(), true);
+  }
+
+  buildDateSel('calc-start', y, m, null, false);
+  var e2 = new Date(now); e2.setMonth(e2.getMonth()+12);
+  buildDateSel('calc-end', e2.getFullYear(), e2.getMonth()+1, null, false);
+
+  var cpk = document.querySelector('#children-list .child-pk');
+  if (cpk) buildDateSel(cpk, y-1, m, 1, true);
+});
+
+// ============================================================
+// CALCULATION CORE
+// ============================================================
+var D_MAX=15690, D_MIN=2869;
+function clampD(v){ return Math.min(D_MAX,Math.max(D_MIN,v)); }
+function fmt(n){ return Math.round(n).toLocaleString('ja-JP'); }
+
+function getSIRates(pref, age) {
+  var hr = (PREF_RATES[pref]||10.0)/100;
+  if (age==='old') hr += 0.0159; // 介護保険料（社会保険料の一部）
+  return { health: hr/2, pension: 0.183/2, employ: 0.0055 };
+}
+
+function calcBonusTedori(amt, prevNet, dep, pref, age, isLeave, ls, le, by, bm) {
+  var rates = getSIRates(pref, age);
+  var exempt = isLeave && isBonusExempt(by, bm, ls, le);
+  var shaho = exempt ? 0 : Math.floor(amt*(rates.health+rates.pension));
+  var koyo = Math.floor(amt*rates.employ);
+  var taxRate = getBonusTaxRate(prevNet, dep);
+  var shotoku = Math.floor((amt-shaho-koyo)*taxRate);
+  var tedori = amt - shaho - koyo - shotoku;
+  var saving = exempt ? Math.floor(amt*(rates.health+rates.pension)) : 0;
+  return {amt:amt, shaho:shaho, koyo:koyo, shotoku:shotoku, tedori:tedori, exempt:exempt, saving:saving, taxRate:taxRate};
+}
+
+function getMonths(s, e){
+  var res=[], cur=new Date(new Date(s).getFullYear(),new Date(s).getMonth(),1);
+  var end=new Date(new Date(e).getFullYear(),new Date(e).getMonth(),1);
+  while(cur<=end){ res.push({y:cur.getFullYear(),m:cur.getMonth()+1}); cur.setMonth(cur.getMonth()+1); }
+  return res;
+}
+
+function daysInLeave(y,m,s,e){
+  if(!s||!e) return 0;
+  var S=new Date(s),E=new Date(e),mS=new Date(y,m-1,1),mE=new Date(y,m,0);
+  var a=S<mS?mS:S, b=E>mE?mE:E;
+  if(a>b) return 0;
+  return Math.floor((b-a)/86400000)+1;
+}
+
+// 180日カウント：当月開始前に実際に取得した育休日数を合算（分割育休の空白期間を除く）
+function daysFromFirstStart(y, m, leaves) {
+  if (!leaves||!leaves.length) return 0;
+  var mS = new Date(y, m-1, 1);
+  var total = 0;
+  for (var i=0; i<leaves.length; i++) {
+    if (!leaves[i].start || !leaves[i].end) continue;
+    var s = new Date(leaves[i].start);
+    var e = new Date(leaves[i].end);
+    if (s >= mS) continue; // この育休期間は当月以降に開始するためスキップ
+    // 当月より前の部分だけを対象にする（new Date(y, m-1, 0) = 前月末日）
+    var effectiveEnd = e < mS ? e : new Date(y, m-1, 0);
+    if (effectiveEnd < s) continue;
+    total += Math.floor((effectiveEnd - s) / 86400000) + 1;
+  }
+  return total;
+}
+
+function isBonusExempt(by,bm,ls,le){
+  if(!ls||!le) return false;
+  var S=new Date(ls),E=new Date(le),last=new Date(by,bm,0);
+  if(S>last||E<last) return false;
+  var p1=new Date(S); p1.setMonth(p1.getMonth()+1); return E>=p1;
+}
+
+// Bonus exempt check across multiple leave periods
+function isBonusExemptMulti(by, bm, leaves) {
+  for (var i=0; i<leaves.length; i++) {
+    if (isBonusExempt(by, bm, leaves[i].start, leaves[i].end)) return true;
+  }
+  return false;
+}
+
+function ageMonths(dob,y,m){ var D=new Date(dob),R=new Date(y,m-1,1); return(R.getFullYear()-D.getFullYear())*12+(R.getMonth()-D.getMonth()); }
+function isEligible(dob,y,m){ if(!dob) return false; var a=ageMonths(dob,y,m); if(a<0) return false; return new Date(y,m-1,1)<=new Date(new Date(dob).getFullYear()+18,2,31); }
+function childAmt(dob,rank,y,m){ if(!isEligible(dob,y,m)) return 0; if(rank>=3) return 30000; return ageMonths(dob,y,m)<36?15000:10000; }
+
+function collectLeaves(who) {
+  var blocks = document.querySelectorAll('#'+who+'-leaves .leave-block');
+  var res = [];
+  blocks.forEach(function(b) {
+    var s = getDateVal(b.querySelector('.leave-start'), true);
+    var e = getDateVal(b.querySelector('.leave-end'), true);
+    var typeTag = b.querySelector('.leave-type-tag');
+    var type = typeTag ? typeTag.dataset.type : 'normal';
+    if (s && e) res.push({start:s, end:e, type:type});
+  });
+  return res;
+}
+
+function collectBonuses(who, leaves, pref, age, dep) {
+  var entries = document.querySelectorAll('#'+who+'-bonus-list .be');
+  var res = [];
+  entries.forEach(function(e) {
+    var pk = e.querySelector('.bonus-month-picker');
+    var by = parseInt(pk.querySelector('.date-y').value);
+    var bm = parseInt(pk.querySelector('.date-m').value);
+    var amt = parseInt(e.querySelector('.bonus-amount').value)||0;
+    var prevNet = parseInt(e.querySelector('.prev-salary').value)||0;
+    if (!amt) return;
+    // Find active leave for this month
+    var activeLeave = null;
+    for (var i=0; i<leaves.length; i++) {
+      if (daysInLeave(by,bm,leaves[i].start,leaves[i].end)>0) { activeLeave=leaves[i]; break; }
+    }
+    var inLeave = !!activeLeave;
+    var ls = activeLeave ? activeLeave.start : null;
+    var le = activeLeave ? activeLeave.end : null;
+    var calc = calcBonusTedori(amt,prevNet,dep,pref,age,inLeave,ls,le,by,bm);
+    res.push({y:by, m:bm, calc:calc});
+  });
+  return res;
+}
+
+// ============================================================
+// 月給手取り計算
+// ============================================================
+// 給与所得の源泉徴収税額表（月額表・甲欄）社会保険料控除後の金額→税額
+// [以上, 未満, dep0, dep1, dep2, dep3, dep4, dep5, dep6, dep7+]
+var MONTHLY_TAX = [
+  [0,88000,0,0,0,0,0,0,0,0],
+  [88000,89000,130,0,0,0,0,0,0,0],
+  [89000,90000,180,0,0,0,0,0,0,0],
+  [90000,91000,230,0,0,0,0,0,0,0],
+  [91000,92000,290,0,0,0,0,0,0,0],
+  [92000,93000,340,0,0,0,0,0,0,0],
+  [93000,94000,390,0,0,0,0,0,0,0],
+  [94000,95000,440,0,0,0,0,0,0,0],
+  [95000,96000,490,0,0,0,0,0,0,0],
+  [96000,97000,540,0,0,0,0,0,0,0],
+  [97000,98000,590,0,0,0,0,0,0,0],
+  [98000,99000,640,0,0,0,0,0,0,0],
+  [99000,101000,720,0,0,0,0,0,0,0],
+  [101000,103000,830,0,0,0,0,0,0,0],
+  [103000,105000,930,0,0,0,0,0,0,0],
+  [105000,107000,1030,0,0,0,0,0,0,0],
+  [107000,109000,1130,0,0,0,0,0,0,0],
+  [109000,111000,1240,0,0,0,0,0,0,0],
+  [111000,113000,1340,0,0,0,0,0,0,0],
+  [113000,115000,1440,0,0,0,0,0,0,0],
+  [115000,117000,1540,0,0,0,0,0,0,0],
+  [117000,119000,1640,0,0,0,0,0,0,0],
+  [119000,121000,1750,0,0,0,0,0,0,0],
+  [121000,123000,1850,0,0,0,0,0,0,0],
+  [123000,125000,1950,0,0,0,0,0,0,0],
+  [125000,127000,2050,0,0,0,0,0,0,0],
+  [127000,129000,2150,0,0,0,0,0,0,0],
+  [129000,131000,2260,0,0,0,0,0,0,0],
+  [131000,133000,2360,0,0,0,0,0,0,0],
+  [133000,135000,2460,0,0,0,0,0,0,0],
+  [135000,137000,2560,0,0,0,0,0,0,0],
+  [137000,139000,2660,0,0,0,0,0,0,0],
+  [139000,141000,2770,0,0,0,0,0,0,0],
+  [141000,143000,2870,0,0,0,0,0,0,0],
+  [143000,145000,2970,0,0,0,0,0,0,0],
+  [145000,147000,3070,0,0,0,0,0,0,0],
+  [147000,149000,3170,0,0,0,0,0,0,0],
+  [149000,151000,3280,0,0,0,0,0,0,0],
+  [151000,153000,3380,0,0,0,0,0,0,0],
+  [153000,155000,3480,0,0,0,0,0,0,0],
+  [155000,157000,3580,0,0,0,0,0,0,0],
+  [157000,160000,3730,0,0,0,0,0,0,0],
+  [160000,163000,3930,0,0,0,0,0,0,0],
+  [163000,166000,4130,0,0,0,0,0,0,0],
+  [166000,169000,4330,0,0,0,0,0,0,0],
+  [169000,172000,4530,0,0,0,0,0,0,0],
+  [172000,175000,4720,0,0,0,0,0,0,0],
+  [175000,178000,4920,0,0,0,0,0,0,0],
+  [178000,181000,5120,0,0,0,0,0,0,0],
+  [181000,184000,5320,0,0,0,0,0,0,0],
+  [184000,187000,5520,0,0,0,0,0,0,0],
+  [187000,190000,5720,0,0,0,0,0,0,0],
+  [190000,193000,5910,0,0,0,0,0,0,0],
+  [193000,196000,6110,0,0,0,0,0,0,0],
+  [196000,199000,6310,0,0,0,0,0,0,0],
+  [199000,202000,6510,0,0,0,0,0,0,0],
+  [202000,205000,6710,0,0,0,0,0,0,0],
+  [205000,208000,6900,0,0,0,0,0,0,0],
+  [208000,211000,7100,0,0,0,0,0,0,0],
+  [211000,214000,7300,0,0,0,0,0,0,0],
+  [214000,217000,7500,0,0,0,0,0,0,0],
+  [217000,220000,7700,0,0,0,0,0,0,0],
+  [220000,223000,7900,0,0,0,0,0,0,0],
+  [223000,226000,8100,0,0,0,0,0,0,0],
+  [226000,229000,8290,0,0,0,0,0,0,0],
+  [229000,232000,8490,0,0,0,0,0,0,0],
+  [232000,235000,8690,0,0,0,0,0,0,0],
+  [235000,238000,8890,0,0,0,0,0,0,0],
+  [238000,241000,9090,0,0,0,0,0,0,0],
+  [241000,244000,9280,2090,0,0,0,0,0,0],
+  [244000,247000,9480,2290,0,0,0,0,0,0],
+  [247000,250000,9680,2490,0,0,0,0,0,0],
+  [250000,253000,9880,2680,0,0,0,0,0,0],
+  [253000,256000,10070,2880,0,0,0,0,0,0],
+  [256000,259000,10270,3080,0,0,0,0,0,0],
+  [259000,262000,10470,3280,0,0,0,0,0,0],
+  [262000,265000,10670,3480,0,0,0,0,0,0],
+  [265000,268000,10870,3670,0,0,0,0,0,0],
+  [268000,271000,11060,3870,0,0,0,0,0,0],
+  [271000,274000,11260,4070,0,0,0,0,0,0],
+  [274000,277000,11460,4270,0,0,0,0,0,0],
+  [277000,280000,11660,4460,0,0,0,0,0,0],
+  [280000,283000,11860,4660,0,0,0,0,0,0],
+  [283000,286000,12050,4860,0,0,0,0,0,0],
+  [286000,289000,12250,5060,0,0,0,0,0,0],
+  [289000,292000,12450,5250,0,0,0,0,0,0],
+  [292000,295000,12650,5450,0,0,0,0,0,0],
+  [295000,298000,12850,5650,0,0,0,0,0,0],
+  [298000,301000,13040,5850,0,0,0,0,0,0],
+  [301000,304000,13240,6040,0,0,0,0,0,0],
+  [304000,307000,13440,6240,0,0,0,0,0,0],
+  [307000,310000,13640,6440,0,0,0,0,0,0],
+  [310000,313000,13840,6640,0,0,0,0,0,0],
+  [313000,316000,14030,6830,0,0,0,0,0,0],
+  [316000,319000,14230,7030,0,0,0,0,0,0],
+  [319000,322000,14430,7230,0,0,0,0,0,0],
+  [322000,325000,14630,7430,0,0,0,0,0,0],
+  [325000,328000,14820,7620,0,0,0,0,0,0],
+  [328000,331000,15020,7820,0,0,0,0,0,0],
+  [331000,334000,15220,8020,0,0,0,0,0,0],
+  [334000,337000,15420,8220,0,0,0,0,0,0],
+  [337000,340000,15620,8410,0,0,0,0,0,0],
+  [340000,343000,15810,8610,0,0,0,0,0,0],
+  [343000,346000,16010,8810,0,0,0,0,0,0],
+  [346000,349000,16210,9010,0,0,0,0,0,0],
+  [349000,352000,16410,9200,0,0,0,0,0,0],
+  [352000,355000,16600,9400,0,0,0,0,0,0],
+  [355000,358000,16800,9600,0,0,0,0,0,0],
+  [358000,361000,17000,9800,0,0,0,0,0,0],
+  [361000,364000,17200,10000,0,0,0,0,0,0],
+  [364000,367000,17400,10190,0,0,0,0,0,0],
+  [367000,370000,17590,10390,0,0,0,0,0,0],
+  [370000,373000,17790,10590,0,0,0,0,0,0],
+  [373000,376000,17990,10790,0,0,0,0,0,0],
+  [376000,379000,18190,10980,0,0,0,0,0,0],
+  [379000,382000,18380,11180,0,0,0,0,0,0],
+  [382000,385000,18580,11380,0,0,0,0,0,0],
+  [385000,388000,18780,11580,0,0,0,0,0,0],
+  [388000,391000,18980,11780,0,0,0,0,0,0],
+  [391000,394000,19170,11970,0,0,0,0,0,0],
+  [394000,397000,19370,12170,0,0,0,0,0,0],
+  [397000,400000,19570,12370,0,0,0,0,0,0],
+  [400000,410000,20200,12800,5400,0,0,0,0,0],
+  [410000,420000,21300,13700,6300,0,0,0,0,0],
+  [420000,430000,22400,14600,7300,0,0,0,0,0],
+  [430000,440000,23500,15500,8200,900,0,0,0,0],
+  [440000,450000,24600,16400,9100,1800,0,0,0,0],
+  [450000,460000,25700,17300,10000,2700,0,0,0,0],
+  [460000,470000,26800,18200,10900,3600,0,0,0,0],
+  [470000,480000,27900,19100,11800,4500,0,0,0,0],
+  [480000,490000,29000,19900,12700,5400,0,0,0,0],
+  [490000,500000,30100,20800,13500,6300,0,0,0,0],
+  [500000,520000,31700,22200,14800,7500,200,0,0,0],
+  [520000,540000,34200,24400,17100,9700,2400,0,0,0],
+  [540000,560000,36700,26900,19500,12100,4800,0,0,0],
+  [560000,580000,39200,29100,21800,14500,7100,0,0,0],
+  [580000,600000,41600,31400,24100,16700,9400,2000,0,0],
+  [600000,620000,44000,33900,26500,19200,11800,4500,0,0],
+  [620000,640000,46400,36400,29000,21600,14300,7000,0,0],
+  [640000,660000,48800,38800,31500,24100,16800,9400,2100,0],
+  [660000,680000,51200,41200,33900,26500,19200,11900,4500,0],
+  [680000,700000,53600,43600,36300,28900,21600,14200,6900,0],
+  [700000,730000,57100,46700,39300,31900,24600,17200,9900,2500],
+  [730000,760000,61700,51000,43600,36200,28900,21600,14200,6900],
+  [760000,800000,67200,56300,48900,41500,34200,26900,19500,12200],
+  [800000,Infinity,75300,64300,56900,49500,42200,34800,27500,20100]
+];
+
+function getMonthlyTax(netSalary, dep) {
+  var d = Math.min(parseInt(dep)||0, 7);
+  for (var i=0; i<MONTHLY_TAX.length; i++) {
+    if (netSalary >= MONTHLY_TAX[i][0] && netSalary < MONTHLY_TAX[i][1]) {
+      return MONTHLY_TAX[i][d+2];
+    }
+  }
+  return 0;
+}
+
+// 月給手取り計算（通常勤務時）
+function calcSalaryTedori(sal, pref, age, dep, mode, fixedRate) {
+  var rates = getSIRates(pref, age);
+  var shahoRate = rates.health + rates.pension + rates.employ;
+  var shaho = Math.floor(sal * shahoRate);
+  var netAfterShaho = sal - shaho;
+
+  if (mode === 'fixed') {
+    // 固定割合モード
+    var rate = (fixedRate || 80) / 100;
+    var tedori = Math.floor(sal * rate);
+    return {sal:sal, shaho:shaho, shotoku:'—', juminzei:'—', tedori:tedori, mode:'fixed', fixedRate:fixedRate||80};
+  } else {
+    // 簡易計算モード：所得税（源泉徴収税額表）＋住民税概算（前年所得の約10%/12）
+    var shotoku = getMonthlyTax(netAfterShaho, dep);
+    var juminzei = Math.floor(sal * 0.10 / 12); // 住民税概算（前年所得ベースの10%を12分割）
+    var tedori = sal - shaho - shotoku - juminzei;
+    return {sal:sal, shaho:shaho, shotoku:shotoku, juminzei:juminzei, tedori:tedori, mode:'simple'};
+  }
+}
+
+function buildRows(months, sal, leaves, bonuses, newBenefit, pref, age, dep, salMode, fixedRate) {
+  var rows = [];
+  months.forEach(function(mn) {
+    var y=mn.y, m=mn.m;
+    var totalDays = 0;
+    for (var i=0; i<leaves.length; i++) {
+      totalDays += daysInLeave(y, m, leaves[i].start, leaves[i].end);
+    }
+
+    var mb = bonuses.filter(function(b){ return b.y===y&&b.m===m; });
+    var daysInMonth = new Date(y, m, 0).getDate();
+
+    if (totalDays === 0) {
+      // 通常給与月（育休なし）
+      if (sal > 0) {
+        var salCalc = calcSalaryTedori(sal, pref, age, dep, salMode, fixedRate);
+        rows.push({y:y, m:m, type:'salary', days:0, rate:0, benefit:0, salCalc:salCalc, bonusCalcs:mb});
+      }
+      return;
+    }
+
+    // 育休月（全日or一部）
+    var df = daysFromFirstStart(y, m, leaves);
+    var daily = clampD(Math.floor(sal/30));
+    // 月内に給付率の境界（28日・180日）をまたぐ場合は区間ごとに計算する
+    var benefit = 0, rem = totalDays, pos = df;
+    if (newBenefit && pos < 28) {
+      var d80 = Math.min(28 - pos, rem);
+      benefit += Math.floor(daily * d80 * 0.80);
+      pos += d80; rem -= d80;
+    }
+    if (rem > 0 && pos < 180) {
+      var d67 = Math.min(180 - pos, rem);
+      benefit += Math.floor(daily * d67 * 0.67);
+      pos += d67; rem -= d67;
+    }
+    if (rem > 0) {
+      benefit += Math.floor(daily * rem * 0.50);
+    }
+    // 表示用レート（月の最初の日の適用率）
+    var rate = df<180 ? 0.67 : 0.50;
+    if (newBenefit && df<28) rate = 0.80;
+
+    // 部分的に育休の場合（月途中で復職/開始）は残り日数分の給与も概算
+    var workDays = daysInMonth - totalDays;
+    var partialSalCalc = null;
+    if (workDays > 0 && sal > 0) {
+      var fullCalc = calcSalaryTedori(sal, pref, age, dep, salMode, fixedRate);
+      var partialTedori = Math.floor(fullCalc.tedori * workDays / daysInMonth);
+      partialSalCalc = {tedori: partialTedori, workDays: workDays, mode: salMode};
+    }
+
+    rows.push({y:y, m:m, type:'leave', days:totalDays, rate:rate, benefit:benefit, salCalc:partialSalCalc, bonusCalcs:mb});
+  });
+  return rows;
+}
+
+function sumRows(rows) {
+  return rows.reduce(function(a,r){
+    var be = r.bonusCalcs.reduce(function(s,b){ return s+b.calc.saving; },0);
+    var bt = r.bonusCalcs.reduce(function(s,b){ return s+b.calc.tedori; },0);
+    var salT = r.salCalc ? r.salCalc.tedori : 0;
+    return {
+      benefit: a.benefit + r.benefit,
+      bonusExempt: a.bonusExempt + be,
+      bonusTedori: a.bonusTedori + bt,
+      salaryTedori: a.salaryTedori + salT,
+      total: a.total + r.benefit + salT + bt
+    };
+  },{benefit:0,bonusExempt:0,bonusTedori:0,salaryTedori:0,total:0});
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+function calculate() {
+  var mamaSal = parseInt(document.getElementById('mama-sal').value)||0;
+  var papaSal = parseInt(document.getElementById('papa-sal').value)||0;
+  var mamaPref = document.getElementById('mama-pref').value;
+  var papaPref = document.getElementById('papa-pref').value;
+  var mamaAge = document.getElementById('mama-age').value;
+  var papaAge = document.getElementById('papa-age').value;
+  var mamaDep = document.getElementById('mama-dep').value;
+  var papaDep = document.getElementById('papa-dep').value;
+  var papaAlso = document.getElementById('papa-also').value==='yes';
+  var calcStart = getDateVal('calc-start',false);
+  var calcEnd = getDateVal('calc-end',false);
+
+  var mamaLeaves = collectLeaves('mama');
+  var papaLeaves = collectLeaves('papa');
+
+  if (!mamaLeaves.length) { alert('ママの育休期間を入力してください'); return; }
+  if (!calcStart||!calcEnd) { alert('計算期間を入力してください'); return; }
+
+  var months = getMonths(calcStart, calcEnd);
+  var mamaBonuses = collectBonuses('mama', mamaLeaves, mamaPref, mamaAge, mamaDep);
+  var papaBonuses = collectBonuses('papa', papaLeaves, papaPref, papaAge, papaDep);
+
+  var childPickers = document.querySelectorAll('#children-list .child-pk');
+  var childDOBs = [];
+  childPickers.forEach(function(p){ childDOBs.push(getDateVal(p,true)); });
+
+  var salMode = currentSalMode;
+  var fixedRate = parseInt(document.getElementById('fixed-rate-slider').value)||80;
+
+  var mamaRows = buildRows(months, mamaSal, mamaLeaves, mamaBonuses, papaAlso, mamaPref, mamaAge, mamaDep, salMode, fixedRate);
+  var papaRows = papaLeaves.length>0 && papaSal>0 ? buildRows(months, papaSal, papaLeaves, papaBonuses, papaAlso, papaPref, papaAge, papaDep, salMode, fixedRate) : [];
+  var mamaT = sumRows(mamaRows), papaT = sumRows(papaRows);
+
+  var childTotal=0, childRows=[];
+  childDOBs.forEach(function(dob,ci){
+    if (!dob) return;
+    var t=0;
+    months.forEach(function(mn){
+      // 児童手当：出生月の翌月から支給が原則
+      var dobDate = new Date(dob);
+      var startMonth = new Date(dobDate.getFullYear(), dobDate.getMonth()+1, 1); // 翌月1日
+      var thisMonth = new Date(mn.y, mn.m-1, 1);
+      if (thisMonth >= startMonth) t += childAmt(dob, ci+1, mn.y, mn.m);
+    });
+    childTotal+=t; childRows.push({rank:ci+1,dob:dob,total:t});
+  });
+
+  var grand = mamaT.total+papaT.total+childTotal;
+  document.getElementById('res-inner').innerHTML = renderAll(mamaRows,mamaT,papaRows,papaT,childRows,childTotal,grand,months,mamaLeaves,papaLeaves);
+  document.getElementById('inp').style.display='none';
+  document.getElementById('res').classList.add('on');
+
+  var txt = '育休シミュレーターで計算したら育休中の総受取見込み額が'+fmt(grand)+'円でした！\n（育休給付金＋ボーナス手取り＋児童手当の合計）\n育休給付金（分割対応）・ボーナス手取り・社保免除・児童手当まで計算できる無料ツール\n#育休 #育児休業給付金 @miruken_papa';
+  document.getElementById('share-link').href = 'https://twitter.com/intent/tweet?text='+encodeURIComponent(txt);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function rateChip(r) {
+  if (r>=0.79) return '<span class="rc r80">80%</span>';
+  if (r>=0.66) return '<span class="rc r67">67%</span>';
+  return '<span class="rc r50">50%</span>';
+}
+
+function renderTable(rows, totals, who) {
+  var trs = '';
+  rows.forEach(function(r){
+    var hasB = r.bonusCalcs.length>0;
+    var bTedori = r.bonusCalcs.reduce(function(s,b){ return s+b.calc.tedori; },0);
+    var bSaving = r.bonusCalcs.reduce(function(s,b){ return s+b.calc.saving; },0);
+    var bAmt = r.bonusCalcs.reduce(function(s,b){ return s+b.calc.amt; },0);
+
+    if (r.type === 'salary') {
+      // 通常給与月
+      var sT = r.salCalc ? r.salCalc.tedori : 0;
+      var modeLabel = r.salCalc && r.salCalc.mode==='fixed'
+        ? '<span class="rc" style="background:rgba(227,179,65,.15);color:var(--gold)">固定'+r.salCalc.fixedRate+'%</span>'
+        : '<span class="rc" style="background:rgba(63,185,80,.15);color:var(--ac2)">簡易計算</span>';
+      trs += '<tr style="opacity:.75">';
+      trs += '<td>'+r.y+'年'+r.m+'月 <span class="rc" style="background:rgba(139,148,158,.15);color:var(--tx2)">通常勤務</span>'+(hasB?' <span class="btag">ボーナス月</span>':'')+'</td>';
+      trs += '<td>—</td><td>—</td>';
+      trs += '<td>—</td>';
+      trs += '<td>'+fmt(sT)+'<small style="font-size:10px;color:var(--tx3);margin-left:2px">概算</small>'+modeLabel+'</td>';
+      trs += '<td>'+(hasB?'<strong>'+fmt(bTedori)+'</strong>':'—')+'</td>';
+      trs += '<td>'+(bSaving>0?'+'+fmt(bSaving):'—')+'</td>';
+      trs += '</tr>';
+    } else {
+      // 育休月
+      trs += '<tr class="'+(hasB?'brow':'')+'">';
+      trs += '<td>'+r.y+'年'+r.m+'月'+(hasB?' <span class="btag">ボーナス月</span>':'');
+      // 部分勤務がある場合は注記
+      if (r.salCalc) trs += ' <span class="rc" style="background:rgba(139,148,158,.15);color:var(--tx2)">一部勤務あり</span>';
+      trs += '</td>';
+      trs += '<td>'+r.days+'日</td><td>'+rateChip(r.rate)+'</td>';
+      trs += '<td>'+fmt(r.benefit)+'</td>';
+      // 部分勤務分の給与
+      if (r.salCalc) {
+        trs += '<td>'+fmt(r.salCalc.tedori)+'<small style="font-size:10px;color:var(--tx3);margin-left:2px">('+r.salCalc.workDays+'日分概算)</small></td>';
+      } else {
+        trs += '<td>—</td>';
+      }
+      trs += '<td>'+(hasB?'<strong>'+fmt(bTedori)+'</strong>':'—')+'</td>';
+      trs += '<td>'+(bSaving>0?'+'+fmt(bSaving):'—')+'</td>';
+      trs += '</tr>';
+    }
+  });
+
+  trs += '<tr class="tr2"><td colspan="3">合計</td>';
+  trs += '<td>'+fmt(totals.benefit)+'</td>';
+  trs += '<td>'+fmt(totals.salaryTedori)+'</td>';
+  trs += '<td>'+(totals.bonusTedori>0?fmt(totals.bonusTedori):'—')+'</td>';
+  trs += '<td>'+(totals.bonusExempt>0?'+'+fmt(totals.bonusExempt):'—')+'</td>';
+  trs += '</tr>';
+
+  var lbl = who==='mama'?'ママ':'パパ';
+  return '<div class="tc ai"><div class="th2"><span class="pt '+who+'"><span class="dot"></span>'+lbl+'</span>月別タイムライン</div>'
+    +'<div style="overflow-x:auto"><table class="tt"><thead><tr>'
+    +'<th>月</th><th>育休日数</th><th>給付率</th><th>育休給付金</th><th>給与手取り</th><th>ボーナス手取り</th><th>社保免除節約</th>'
+    +'</tr></thead><tbody>'+trs+'</tbody></table></div></div>';
+}
+
+function renderCalendar(mamaRows, papaRows, childRows, months) {
+  // 給付金支給：2ヶ月ごとにまとめて支給（休業2ヶ月目の翌々月が目安）
+  var payMonths = {};
+  function markPay(rows, who) {
+    for (var i=1; i<rows.length; i+=2) {
+      var py=rows[i].y, pm=rows[i].m+2;
+      if(pm>12){pm-=12;py++;}
+      var k=py+'-'+pm;
+      if(!payMonths[k]) payMonths[k]=[];
+      payMonths[k].push(who);
+    }
+  }
+  markPay(mamaRows,'mama'); markPay(papaRows,'papa');
+
+  var bonusMonths={};
+  function markBonus(rows){ rows.forEach(function(r){ if(r.bonusCalcs.length>0) bonusMonths[r.y+'-'+r.m]=true; }); }
+  markBonus(mamaRows); markBonus(papaRows);
+
+  var childMonths={};
+  // 児童手当：偶数月支給（2,4,6,8,10,12月）
+  if(childRows.length>0){
+    months.forEach(function(mn){ if(mn.m%2===0) childMonths[mn.y+'-'+mn.m]=true; });
+  }
+
+  var html = '<div class="card ai"><div class="ct">受取タイミングカレンダー</div>';
+  html += '<p style="font-size:12px;color:var(--tx2);margin-bottom:12px;line-height:1.7">';
+  html += '<span class="ctag ctag-pay" style="margin-right:6px">給付金</span>2ヶ月分まとめて支給（目安）&nbsp;&nbsp;';
+  html += '<span class="ctag ctag-bonus" style="margin-right:6px">ボーナス</span>ボーナス支給月&nbsp;&nbsp;';
+  html += '<span class="ctag ctag-child" style="margin-right:6px">児童手当</span>偶数月支給（前2ヶ月分）</p>';
+  html += '<div class="cal-grid">';
+
+  months.forEach(function(mn){
+    var k=mn.y+'-'+mn.m;
+    var hasPay=payMonths[k], hasBonus=bonusMonths[k], hasChild=childMonths[k];
+    var tagCount=[hasPay,hasBonus,hasChild].filter(Boolean).length;
+    var cls='cal-m';
+    if(tagCount>1) cls+=' has-multi';
+    else if(hasPay) cls+=' has-pay';
+    else if(hasBonus) cls+=' has-bonus';
+    else if(hasChild) cls+=' has-child';
+
+    html+='<div class="'+cls+'"><div class="cm-lbl">'+mn.y+'/'+mn.m+'月</div><div class="cm-tags">';
+    if(hasPay) html+='<span class="ctag ctag-pay">'+hasPay.map(function(w){return w==='mama'?'ママ':'パパ';}).join('・')+'給付金</span>';
+    if(hasBonus) html+='<span class="ctag ctag-bonus">ボーナス</span>';
+    if(hasChild) html+='<span class="ctag ctag-child">児童手当</span>';
+    if(!hasPay&&!hasBonus&&!hasChild) html+='<span style="font-size:10px;color:var(--tx3)">—</span>';
+    html+='</div></div>';
+  });
+  html+='</div><p style="font-size:11px;color:var(--tx3);margin-top:8px">※給付金の振込タイミングはハローワーク・勤務先の手続き状況により前後します</p></div>';
+  return html;
+}
+
+function renderAll(mamaRows,mamaT,papaRows,papaT,childRows,childTotal,grand,months,mamaLeaves,papaLeaves){
+  var hasPapa=papaRows.length>0, hasKid=childRows.length>0&&childTotal>0;
+
+  var html='<div class="rh ai"><h2>育休期間中の総受取見込み額</h2>'
+    +'<div class="ta">'+fmt(grand)+'<span>円</span></div>'
+    +'<div class="rs">育休給付金＋給与手取り（復職期間・部分勤務含む）＋ボーナス手取り＋児童手当の合計概算<br><small style="color:var(--tx3)">※社会保険料免除による節約額は別途参考表示</small></div></div>';
+
+  html+='<div class="kr ai">';
+  html+='<div class="kp"><div class="kl">ママの育休給付金</div><div class="kv bl">'+fmt(mamaT.benefit)+'<small>円</small></div></div>';
+  if(mamaT.salaryTedori>0) html+='<div class="kp"><div class="kl">復職期間の給与手取り（ママ）</div><div class="kv" style="color:var(--tx)">'+fmt(mamaT.salaryTedori)+'<small>円</small></div></div>';
+  if(mamaT.bonusTedori>0) html+='<div class="kp"><div class="kl">ボーナス手取り（ママ）</div><div class="kv pr">'+fmt(mamaT.bonusTedori)+'<small>円</small></div></div>';
+  if(hasPapa){
+    html+='<div class="kp"><div class="kl">パパの育休給付金</div><div class="kv bl">'+fmt(papaT.benefit)+'<small>円</small></div></div>';
+    if(papaT.salaryTedori>0) html+='<div class="kp"><div class="kl">復職期間の給与手取り（パパ）</div><div class="kv" style="color:var(--tx)">'+fmt(papaT.salaryTedori)+'<small>円</small></div></div>';
+    if(papaT.bonusTedori>0) html+='<div class="kp"><div class="kl">ボーナス手取り（パパ）</div><div class="kv pr">'+fmt(papaT.bonusTedori)+'<small>円</small></div></div>';
+  }
+  if(hasKid) html+='<div class="kp"><div class="kl">児童手当合計</div><div class="kv gd">'+fmt(childTotal)+'<small>円</small></div></div>';
+  var totalExempt = mamaT.bonusExempt + papaT.bonusExempt;
+  if(totalExempt>0) html+='<div class="kp" style="border-color:rgba(63,185,80,.3);background:rgba(63,185,80,.04)"><div class="kl" style="color:var(--ac2)">社保免除節約（参考）</div><div class="kv gn">+'+fmt(totalExempt)+'<small>円</small></div></div>';
+  html+='</div>';
+
+  html+=renderTable(mamaRows,mamaT,'mama');
+  if(hasPapa) html+=renderTable(papaRows,papaT,'papa');
+
+  if(hasKid){
+    html+='<div class="card ai"><div class="ct">児童手当（計算期間合計）</div><div class="ag">';
+    childRows.forEach(function(r){
+      if(r.total>0) html+='<div class="ar"><div class="ci">第'+r.rank+'子（'+r.dob+'生まれ）</div><div class="ca">'+fmt(r.total)+'円</div></div>';
+    });
+    html+='<div class="ar" style="border-color:var(--gold);background:rgba(227,179,65,.05)">'
+      +'<div class="ci" style="font-weight:700;color:var(--tx)">合計</div>'
+      +'<div class="ca" style="font-size:17px">'+fmt(childTotal)+'円</div></div></div></div>';
+  }
+
+  html+=renderCalendar(mamaRows,papaRows,childRows,months);
+  return html;
+}
+
+var currentSalMode = 'simple';
+function setSalMode(mode) {
+  currentSalMode = mode;
+  document.getElementById('mode-btn-simple').classList.toggle('on', mode==='simple');
+  document.getElementById('mode-btn-fixed').classList.toggle('on', mode==='fixed');
+  document.getElementById('mode-simple-desc').style.display = mode==='simple' ? 'block' : 'none';
+  document.getElementById('mode-fixed-desc').style.display = mode==='fixed' ? 'block' : 'none';
+}
+
+function resetForm(){
+  document.getElementById('res').classList.remove('on');
+  document.getElementById('inp').style.display='block';
+  document.getElementById('res-inner').innerHTML='';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
